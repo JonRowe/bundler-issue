@@ -1,0 +1,35 @@
+name: Demonstrate bundler issue
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - '*'
+jobs:
+  test:
+    name: Ruby ${{ matrix.ruby }} and Bundler ${{ matrix.bundler }}
+    runs-on: 'ubuntu-20.04'
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - '3.0'
+          - '2.7'
+        patch_level:
+          - '23'
+          - '22'
+          - '21'
+          - '20'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler: '2.2.${{ matrix.patch_level }}'
+          ruby-version: ${{ matrix.ruby }}
+      - run: yes | gem update --system '3.2.${{ matrix.patch_level }}'
+      - run: yes | gem install bundler -v '2.2.${{ matrix.patch_level }}'
+      - run: bundle install --standalone
+      - run: bundle binstubs --all
+      - run: ls bin
+      - run: bundle exec ruby lib/rake_is_available.rb
